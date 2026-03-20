@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>霍格沃茨 · 生日剧情</title>
+<title>HAPPY TIME</title>
 <style>
   * {
     margin: 0;
@@ -146,7 +146,7 @@
     to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
   }
 
-  /* 角色框 */
+  /* 角色框 —— 加入淡入淡出，更丝滑 */
   .character-sprite {
     width: 110px;
     height: 140px;
@@ -160,6 +160,11 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.25s ease; /* 丝滑淡入 */
+  }
+  .character-sprite img.show {
+    opacity: 1;
   }
 
   .game-container {
@@ -285,7 +290,7 @@
     } catch (e) {}
   }
 
-  // 剧情 ———— 已恢复对应角色立绘 c: 字段
+  // 剧情（立绘配置保持不变）
   const story = [
     {c:"kaluo.png",t:"你睁开眼，自己都没意识到自己什么时候在魔法史课上睡着了。"},
     {c:"kaluo.png",t:"环顾一周后，你并没找到两个熟悉的身影，教室里空荡荡的，夕阳昏黄的光芒懒洋洋地钻进教室。"},
@@ -320,7 +325,7 @@
     {c:"wente.png",t:"温特从床后面探出头，捧着蛋糕朝你走过来。"},
     {c:"kaluo.png",t:"“尤利娅？温特？”"},
     {c:"youliya.png",t:"“是我们呀是我们呀~”"},
-    {c:"youliya.png",t:"“惊不惊喜！HAPPY BIRTHDAY！！！”"},
+    {c:"youliya.png",t:"惊不惊喜！HAPPY BIRTHDAY！！！"},
     {c:"kaluo.png",t:"你这个时候才意识到今天这两人神秘失踪的原因，看着蹭了一身灰的尤利娅有点无奈。"},
     {c:"kaluo.png",t:"“温特就算了...你怎么进来的，明明有反女生魔法...”"},
     {c:"wente.png",t:"你目光移到旁边一言不发，努力插上蜡烛后小心翼翼控制魔法试图把它们点燃的黑发男子身上。"},
@@ -348,11 +353,27 @@
   const optsEl = document.getElementById("optionsArea");
   const charImg = document.getElementById("characterImg");
 
+  // ======================================
+  // 【优化版】丝滑立绘切换（解决不生效、卡顿）
+  // ======================================
+  let currentPortrait = "";
+  function changePortrait(src) {
+    if (!src || src === currentPortrait) return;
+    currentPortrait = src;
+
+    charImg.classList.remove("show");
+    setTimeout(() => {
+      charImg.src = src;
+      charImg.classList.add("show");
+    }, 100);
+  }
+
   function showScene() {
     const s = story[index];
-    // ↓↓↓ 这里恢复了立绘自动切换 ↓↓↓
-    charImg.src = s.c || "";
-    // ↑↑↑ 立绘切换 ↑↑↑
+
+    // ↓↓↓ 稳定丝滑切换立绘 ↓↓↓
+    changePortrait(s.c);
+
     textEl.innerHTML = "";
     optsEl.innerHTML = "";
 
@@ -434,6 +455,4 @@
 </script>
 </body>
 </html>
-
-
 
