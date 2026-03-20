@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>game</title>
+<title>霍格沃茨 · 生日剧情</title>
 <style>
 *{
   margin:0;
   padding:0;
   box-sizing:border-box;
-  font-family: "Georgia", "Times New Roman", serif;
 }
 body{
   background:#1a1410;
@@ -23,7 +22,40 @@ body{
   justify-content:center;
   color:#e0d8c8;
   padding:20px;
+  position:relative;
+  overflow:hidden;
+  font-family: "Palatino Linotype", "Georgia", serif;
+  letter-spacing:0.5px;
 }
+
+.star {
+  position:absolute;
+  width:2px;
+  height:2px;
+  background:#f9eac1;
+  border-radius:50%;
+  animation:twinkle 3s infinite alternate;
+  z-index:-1;
+}
+@keyframes twinkle {
+  0%{opacity:0.2;}
+  100%{opacity:1;}
+}
+
+.magic-particle {
+  position:absolute;
+  width:3px;
+  height:3px;
+  background:#fad261;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:10;
+  animation:magicFloat 1s forwards;
+}
+@keyframes magicFloat {
+  to{transform:translateY(-20px);opacity:0;}
+}
+
 .game-container{
   width:100%;
   max-width:900px;
@@ -37,9 +69,10 @@ body{
   width:110px;
   height:140px;
   border:2px solid #c9a82d;
-  border-radius:4px;
+  border-radius:6px;
   background:#111;
   overflow:hidden;
+  box-shadow:0 0 12px #d4af3766;
 }
 .character-sprite img{
   width:100%;
@@ -51,9 +84,9 @@ body{
   width:100%;
   min-height:220px;
   border:3px solid #c9a82d;
-  border-radius:6px;
+  border-radius:10px;
   background:rgba(20,15,10,0.92);
-  padding:20px;
+  padding:24px;
   font-size:17px;
   line-height:1.8;
   display:flex;
@@ -62,21 +95,21 @@ body{
   text-align:center;
   white-space:pre-line;
   word-break:break-all;
+  box-shadow:0 0 25px #d4af3755;
 }
 
-/* 细线条原生打字光标 */
 #cursor{
   display:inline;
-  width: 1px;
-  height: 1.1em;
-  background-color: rgba(255,255,255,0.9);
-  vertical-align: baseline;
-  animation: blink 1.1s infinite;
-  margin-left: 1px;
+  width:1px;
+  height:1.1em;
+  background:rgba(255,255,255,0.9);
+  vertical-align:baseline;
+  animation:blink 1.1s infinite;
+  margin-left:1px;
 }
 @keyframes blink{
-  0%,45% { opacity:1; }
-  55%,100% { opacity:0; }
+  0%,45%{opacity:1;}
+  55%,100%{opacity:0;}
 }
 
 .options-area{
@@ -90,17 +123,18 @@ body{
 .option-btn{
   padding:11px 30px;
   border:2px solid #c9a82d;
-  border-radius:4px;
-  background:#2d2218;
+  border-radius:8px;
+  background:#2d2118;
   color:#f8d762;
   font-size:16px;
   cursor:pointer;
   transition:0.25s;
 }
 .option-btn:hover{
-  background:#c9a82d;
+  background:#d4af37;
   color:#111;
   transform:scale(1.05);
+  box-shadow:0 0 12px #d4af37;
 }
 
 .wish-input{
@@ -108,15 +142,15 @@ body{
   font-size:16px;
   width:260px;
   border:2px solid #c9a82d;
-  border-radius:4px;
+  border-radius:8px;
   background:#222;
   color:#fff;
   outline:none;
 }
 </style>
 </head>
-<body>
 
+<body>
 <div class="game-container">
   <div class="character-sprite">
     <img id="characterImg" src="" alt="角色">
@@ -130,16 +164,57 @@ body{
 </div>
 
 <script>
+// 星光背景
+function createStars() {
+  for(let i=0;i<60;i++){
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random()*100+'%';
+    star.style.top = Math.random()*100+'%';
+    star.style.animationDelay = Math.random()*3+'s';
+    document.body.appendChild(star);
+  }
+}
+createStars();
+
+// 魔法粒子
+function createMagicParticle(x, y) {
+  const p = document.createElement('div');
+  p.className = 'magic-particle';
+  p.style.left = x+'px';
+  p.style.top = y+'px';
+  document.body.appendChild(p);
+  setTimeout(()=>p.remove(), 1000);
+}
+
+// =============== 打字机音效（纯本地生成，无外部链接）===============
+let audioCtx;
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function playTypeSound() {
+  try {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 440 + Math.random() * 100;
+    gain.gain.value = 0.05;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+    setTimeout(() => osc.stop(), 100);
+  } catch(e) {}
+}
+// =================================================================
+
 const story = [
   { c:"kaluo.png", t:"你睁开眼，自己都没意识到自己什么时候在魔法史课上睡着了。" },
   { c:"kaluo.png", t:"环顾一周后，你并没找到两个熟悉的身影，教室里空荡荡的，夕阳昏黄的光芒懒洋洋地钻进教室。" },
   { c:"kaluo.png", t:"“那两个家伙去哪了？”" },
   { c:"kaluo.png", t:"你叹了口气，站起身，收拾了一下平摊在桌上的纸笔，准备找一下自己两个不省心的伙伴。" },
-  { c:"kaluo.png", t:"要去哪里呢？", opt:[
-    {t:"图书馆",n:5},
-    {t:"食堂",n:9},
-    {t:"主楼",n:13}
-  ]},
+  { c:"kaluo.png", t:"要去哪里呢？", opt:[{t:"图书馆",n:5},{t:"食堂",n:9},{t:"主楼",n:13}]},
 
   { c:"kaluo.png", t:"你小心翼翼走进图书馆，放眼望去全是专注地进行着OWLs复习的巫师。" },
   { c:"kaluo.png", t:"轻手轻脚游走了一圈后，你没有找到那两个熟悉的身影。" },
@@ -160,9 +235,9 @@ const story = [
   { c:"kaluo.png", t:"你叹息一声，对这两个不省心的家伙表示头疼，决定先回寝室一趟。" },
   { c:"kaluo.png", t:"格兰芬多休息室里一如既往的热闹，壁炉中摇曳的火光照在你黑色的校袍外部。" },
   { c:"kaluo.png", t:"你没理会叽叽喳喳的同学们，径直走向自己的寝室。" },
-  { c:"kaluo.png", t:"你站在寝室门口，一墙之隔的寝室里没有任何声响，整个走廊都静悄悄的。" },
+  { c:"kaluo.png", t:"你站在寝室门口，一墙之隔的寝室没有任何声响，整个走廊都静悄悄的。" },
   { c:"kaluo.png", t:"你没放在心上，推开门。" },
-  { c:"kaluo.png", t:"室内只有靠近窗台那一侧有一点夜光，窗户开着，风把窗帘带的呼呼作响。" },
+  { c:"kaluo.png", t:"室内只有靠近窗台那一点夜光，窗户开着，风把窗帘吹得呼呼作响。" },
   { c:"kaluo.png", t:"“温特他们又没关窗...”" },
   { c:"kaluo.png", t:"你随手关上门，走向窗户，伸出手把窗户拉过来。" },
 
@@ -201,7 +276,10 @@ const story = [
 
 const typingSpeed = 35;
 let index = 0;
-let visited = new Set();
+
+// 记录玩家看过哪些选项
+const optionKeys = [5,9,13];
+let seenOptions = new Set();
 
 const img = document.getElementById("characterImg");
 const textEl = document.getElementById("text");
@@ -227,27 +305,45 @@ function showScene() {
     }
 
     if (s.opt) {
+      // 画三个选项
       s.opt.forEach(o => {
         const b = document.createElement("button");
         b.className = "option-btn";
         b.textContent = o.t;
-        b.onclick = () => { index = o.n; showScene(); };
+        b.onclick = () => {
+          // 标记已查看
+          seenOptions.add(o.n);
+          index = o.n;
+          showScene();
+        };
         opts.appendChild(b);
       });
+
+      // 如果已经都看过了，显示【继续】
+      if (optionKeys.every(k => seenOptions.has(k))) {
+        const nextBtn = document.createElement("button");
+        nextBtn.className = "option-btn";
+        nextBtn.textContent = "继续";
+        nextBtn.style.marginLeft = "10px";
+        nextBtn.onclick = () => {
+          // 跳到选项之后的主线剧情
+          index = 17;
+          showScene();
+        };
+        opts.appendChild(nextBtn);
+      }
       return;
     }
 
     if (s.back) {
-      visited.add(index);
       const backBtn = document.createElement("button");
       backBtn.className = "option-btn";
       backBtn.textContent = "返回选择";
-      backBtn.onclick = () => { index = 4; showScene(); };
+      backBtn.onclick = () => {
+        index = 4;
+        showScene();
+      };
       opts.appendChild(backBtn);
-
-      if (visited.size >= 3) {
-        setTimeout(() => { index = 17; showScene(); }, 1200);
-      }
       return;
     }
 
@@ -259,6 +355,7 @@ function showScene() {
   });
 }
 
+// 打字机 + 粒子 + 每字音效
 function typeText(str, callback) {
   let i = 0;
   textEl.innerHTML = "";
@@ -266,6 +363,14 @@ function typeText(str, callback) {
   function step() {
     if (i < str.length) {
       textEl.innerHTML = str.slice(0, i + 1) + '<span id="cursor">|</span>';
+      
+      const rect = textEl.getBoundingClientRect();
+      const x = rect.left + rect.width/2 + (Math.random()-0.5)*40;
+      const y = rect.top + rect.height/2 + (Math.random()-0.5)*20;
+      createMagicParticle(x, y);
+
+      playTypeSound();
+
       i++;
       setTimeout(step, typingSpeed);
     } else {
@@ -279,3 +384,4 @@ showScene();
 </script>
 </body>
 </html>
+
