@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HAPPY TIME</title>
+<title>霍格沃茨 · 生日剧情</title>
 <style>
   * {
     margin: 0;
@@ -195,35 +195,32 @@
 
 <script>
   // ==========================
-  // 【核心修复】提前预加载所有立绘图片
+  // 预加载立绘
   // ==========================
-  const portraits = [
-    "kaluo.png",
-    "youliya.png",
-    "wente.png"
-  ];
+  const portraits = ["kaluo.png", "youliya.png", "wente.png"];
+  let preloadMap = {};
+  let currentPortrait = "";
 
-  const loadedImages = {};
-  let preloadDone = false;
-
-  // 预加载函数
-  function preloadImages() {
-    let count = 0;
+  function preloadAll() {
     portraits.forEach(src => {
       const img = new Image();
       img.src = src;
-      img.onload = () => {
-        loadedImages[src] = img;
-        count++;
-        if (count === portraits.length) {
-          preloadDone = true;
-          console.log("所有立绘预加载完成");
-        }
-      };
-      img.onerror = () => console.warn(src + " 加载失败");
+      preloadMap[src] = img;
     });
   }
-  preloadImages();
+  preloadAll();
+
+  // ==========================
+  // 立绘切换（修复版）
+  // ==========================
+  function setCharacter(src) {
+    if (!src) return;
+    if (src === currentPortrait) return;
+
+    const img = document.getElementById("characterImg");
+    img.src = src;
+    currentPortrait = src;
+  }
 
   // ==========================
   // 背景星光
@@ -318,7 +315,7 @@
   }
 
   // ==========================
-  // 剧情
+  // 剧情（立绘配置完全不变）
   // ==========================
   const story = [
     {c:"kaluo.png",t:"你睁开眼，自己都没意识到自己什么时候在魔法史课上睡着了。"},
@@ -377,26 +374,18 @@
   let index = 0;
   const optionTargets = [5,9,13];
   let seen = new Set();
-  let currentSrc = "";
 
   const textEl = document.getElementById("text");
   const optsEl = document.getElementById("optionsArea");
-  const charImg = document.getElementById("characterImg");
 
   // ==========================
-  // 【稳定切换】立绘切换函数
+  // 剧情显示（立绘一定切换）
   // ==========================
-  function setPortrait(src) {
-    if (!src) return;
-    if (src === currentSrc) return; // 相同不重复设置
-    if (!loadedImages[src]) return; // 没加载完不切换
-    charImg.src = src;
-    currentSrc = src;
-  }
-
   function showScene() {
     const s = story[index];
-    setPortrait(s.c); // 安全切换立绘
+
+    // 强制刷新立绘
+    setCharacter(s.c);
 
     textEl.innerHTML = "";
     optsEl.innerHTML = "";
@@ -475,17 +464,11 @@
     step();
   }
 
-  // 等待预加载完成再启动
-  function startGame() {
-    if (preloadDone) {
-      showScene();
-    } else {
-      setTimeout(startGame, 50);
-    }
-  }
-  startGame();
+  // 启动
+  setTimeout(showScene, 100);
 </script>
 </body>
 </html>
+
 
 
