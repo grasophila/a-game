@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HAPPY TIME</title>
+<title>霍格沃茨 · 生日剧情</title>
 <style>
   * {
     margin: 0;
@@ -146,7 +146,7 @@
     to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
   }
 
-  /* 角色框 —— 加入淡入淡出，更丝滑 */
+  /* 角色立绘 */
   .character-sprite {
     width: 110px;
     height: 140px;
@@ -160,11 +160,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0;
-    transition: opacity 0.25s ease; /* 丝滑淡入 */
-  }
-  .character-sprite img.show {
-    opacity: 1;
+    display: block;
   }
 
   .game-container {
@@ -198,7 +194,40 @@
 </div>
 
 <script>
-  // 初始化背景星光
+  // ==========================
+  // 【核心修复】提前预加载所有立绘图片
+  // ==========================
+  const portraits = [
+    "kaluo.png",
+    "youliya.png",
+    "wente.png"
+  ];
+
+  const loadedImages = {};
+  let preloadDone = false;
+
+  // 预加载函数
+  function preloadImages() {
+    let count = 0;
+    portraits.forEach(src => {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => {
+        loadedImages[src] = img;
+        count++;
+        if (count === portraits.length) {
+          preloadDone = true;
+          console.log("所有立绘预加载完成");
+        }
+      };
+      img.onerror = () => console.warn(src + " 加载失败");
+    });
+  }
+  preloadImages();
+
+  // ==========================
+  // 背景星光
+  // ==========================
   function initStars() {
     for (let i = 0; i < 80; i++) {
       const el = document.createElement('div');
@@ -233,7 +262,7 @@
     }
   }
 
-  // 礼花 + 礼花音效
+  // 礼花 + 音效
   function createConfetti() {
     for (let i = 0; i < 120; i++) {
       const c = document.createElement('div');
@@ -249,13 +278,12 @@
     playConfettiSound();
   }
 
-  // 音频上下文
+  // 音频
   let audioCtx;
   function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
 
-  // 打字音效
   function playTypeSound() {
     try {
       initAudio();
@@ -272,7 +300,6 @@
     } catch (e) {}
   }
 
-  // 礼花音效
   function playConfettiSound() {
     try {
       initAudio();
@@ -290,7 +317,9 @@
     } catch (e) {}
   }
 
-  // 剧情（立绘配置保持不变）
+  // ==========================
+  // 剧情
+  // ==========================
   const story = [
     {c:"kaluo.png",t:"你睁开眼，自己都没意识到自己什么时候在魔法史课上睡着了。"},
     {c:"kaluo.png",t:"环顾一周后，你并没找到两个熟悉的身影，教室里空荡荡的，夕阳昏黄的光芒懒洋洋地钻进教室。"},
@@ -330,12 +359,12 @@
     {c:"kaluo.png",t:"“温特就算了...你怎么进来的，明明有反女生魔法...”"},
     {c:"wente.png",t:"你目光移到旁边一言不发，努力插上蜡烛后小心翼翼控制魔法试图把它们点燃的黑发男子身上。"},
     {c:"wente.png",t:"温特慢吞吞地抬起头。"},
-    {c:"wente.png",t:"...爬墙..."},
+    {c:"wente.png",t:"“...爬墙...”"},
     {c:"wente.png",t:"他终于把火点燃了，几根五颜六色的蜡烛在涂的歪七扭八的蛋糕上热烈地燃着欢快的火焰。"},
     {c:"youliya.png",t:"她热情地把你拉过去。"},
-    {c:"youliya.png",t:"快来许个愿呀--"},
+    {c:"youliya.png",t:"“快来许个愿呀--”"},
     {c:"wente.png",t:"他捧着蛋糕凑到你面前。"},
-    {c:"kaluo.png",t:"..."},
+    {c:"kaluo.png",t:"“...”"},
     {c:"kaluo.png",t:"你叹了口气，双手合十闭上眼睛。"},
     {c:"kaluo.png",t:"许个愿吧：",input:true},
     {c:"kaluo.png",t:"你睁开眼睛，一口气吹掉面前的几根蜡烛。"},
@@ -348,31 +377,26 @@
   let index = 0;
   const optionTargets = [5,9,13];
   let seen = new Set();
+  let currentSrc = "";
 
   const textEl = document.getElementById("text");
   const optsEl = document.getElementById("optionsArea");
   const charImg = document.getElementById("characterImg");
 
-  // ======================================
-  // 【优化版】丝滑立绘切换（解决不生效、卡顿）
-  // ======================================
-  let currentPortrait = "";
-  function changePortrait(src) {
-    if (!src || src === currentPortrait) return;
-    currentPortrait = src;
-
-    charImg.classList.remove("show");
-    setTimeout(() => {
-      charImg.src = src;
-      charImg.classList.add("show");
-    }, 100);
+  // ==========================
+  // 【稳定切换】立绘切换函数
+  // ==========================
+  function setPortrait(src) {
+    if (!src) return;
+    if (src === currentSrc) return; // 相同不重复设置
+    if (!loadedImages[src]) return; // 没加载完不切换
+    charImg.src = src;
+    currentSrc = src;
   }
 
   function showScene() {
     const s = story[index];
-
-    // ↓↓↓ 稳定丝滑切换立绘 ↓↓↓
-    changePortrait(s.c);
+    setPortrait(s.c); // 安全切换立绘
 
     textEl.innerHTML = "";
     optsEl.innerHTML = "";
@@ -430,7 +454,7 @@
     });
   }
 
-  // 打字机输出
+  // 打字机
   function typeText(str, cb) {
     let i = 0;
     textEl.innerHTML = "";
@@ -451,8 +475,17 @@
     step();
   }
 
-  showScene();
+  // 等待预加载完成再启动
+  function startGame() {
+    if (preloadDone) {
+      showScene();
+    } else {
+      setTimeout(startGame, 50);
+    }
+  }
+  startGame();
 </script>
 </body>
 </html>
+
 
